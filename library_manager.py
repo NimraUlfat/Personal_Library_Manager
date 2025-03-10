@@ -30,13 +30,17 @@ def save_library():
 if 'library' not in st.session_state:
     st.session_state.library = load_library()
 
-def add_book(title, author, year, genre, read_status):
+def add_book(title, author, year, genre, language, read_status):
     """Add a new book to the library."""
+    if not language:  # If language is not provided, set it to "Unknown"
+        language = "Unknown"
+        
     book = {
         'title': title,
         'author': author,
         'year': year,
         'genre': genre,
+        'language': language,
         'read_status': read_status
     }
     st.session_state.library.append(book)
@@ -74,12 +78,14 @@ def display_all_books():
     else:
         for i, book in enumerate(st.session_state.library, 1):
             status = "Read" if book['read_status'] else "Unread"
-            st.write(f"{i}. **{book['title']}** by {book['author']} ({book['year']}) - {book['genre']} - {status}")
+            # Use 'Unknown' if the 'language' key is missing
+            language = book.get('language', 'Unknown')  
+            st.write(f"{i}. {book['title']} by {book['author']} ({book['year']}) - {book['genre']} - {language} - {status}")
 
 def clear_session():
     """Clear session state to simulate exit."""
     st.session_state.library = []  # Clear the library
-    st.write("❌ **Session cleared. Exiting...**")
+    st.write("❌ Session cleared. Exiting...")
 
 # Streamlit UI with styling
 st.markdown(
@@ -172,7 +178,8 @@ st.markdown(
 st.title('📖 Personal Library Manager📚')
 
 # Sidebar Menu 
-menu = st.sidebar.selectbox('📚 **Choose an option**:', [
+menu = st.sidebar.selectbox('📚 Choose an option:', [
+    '🏠 Home',
     '➕ Add a book', 
     '🗑️ Remove a book', 
     '🔎 Search for a book', 
@@ -181,69 +188,76 @@ menu = st.sidebar.selectbox('📚 **Choose an option**:', [
     '🔚 Exit'
 ])
 
-if menu == '➕ Add a book':
-    st.subheader('➕ **Add a new book**')
-    title = st.text_input("📘 **Enter book title**:")
-    author = st.text_input("✍️ **Enter author**:")
-    year = st.number_input("📅 **Enter publication year**:", min_value=0, max_value=2025, step=1)
-    genre = st.text_input("🎭 **Enter genre**:")
-    read_status = st.selectbox("✅ **Has the book been read?**", ['Yes', 'No'])
+if menu == '🏠 Home':
+    st.markdown("### 📖 Welcome to your Personal Library!")
+    st.write("Manage your books effortlessly!")
+
+elif menu == '➕ Add a book':
+    st.subheader('➕ Add a new book')
+    title = st.text_input("📘 Enter book title: ")
+    author = st.text_input("✍️ Enter author: ")
+    year = st.number_input("📅 Enter publication year:", min_value=0, max_value=2025, step=1)
+    genre = st.text_input("📚 Genre (e.g. Fiction, Non-Fiction, Fantasy):")
+    language = st.text_input("🌍 Language (e.g. English, Spanish):")
+    read_status = st.selectbox("✅ Has the book been read?", ['Yes', 'No'])
     read_status = True if read_status == 'Yes' else False
 
     if st.button('Add Book'):
-        add_book(title, author, year, genre, read_status)
+        add_book(title, author, year, genre, language, read_status)
         save_library()  # Save the library after adding a book
 
 elif menu == '🗑️ Remove a book':
-    st.subheader('🗑️ **Remove a book**')
-    title = st.text_input("🔍 **Enter the title of the book to remove**:")
+    st.subheader('🗑️ Remove a book')
+    title = st.text_input("🔍 Enter the title of the book to remove: ")
     if st.button('Remove Book'):
         remove_book(title)
         save_library()  # Save the library after removing a book
 
 elif menu == '🔎 Search for a book':
-    st.subheader('🔎 **Search for a book**')
-    search_option = st.radio("🔍 **Search by**:", ("Title", "Author"))
+    st.subheader('🔎 Search for a book')
+    search_option = st.radio("🔍 Search by:", ("Title", "Author"))
     
     if search_option == "Title":
-        title = st.text_input("**Enter book title to search for**:")
+        title = st.text_input("Enter book title to search for: ")
         if st.button("Search by Title"):
             results = search_books(title)
             if results:
-                st.write("### **Matching Books**:")
+                st.write("### Matching Books: ")
                 for i, book in enumerate(results, 1):
                     status = "Read" if book['read_status'] else "Unread"
-                    st.write(f"{i}. **{book['title']}** by {book['author']} ({book['year']}) - {book['genre']} - {status}")
+                    language = book.get('language', 'Unknown')  # Handle missing language
+                    st.write(f"{i}. {book['title']} by {book['author']} ({book['year']}) - {book['genre']} - {language} - {status}")
             else:
-                st.write("🚫 **No books found with that title.**")
+                st.write("🚫 No books found with that title.")
 
     elif search_option == "Author":
-        author = st.text_input("**Enter author name to search for**:")
+        author = st.text_input("Enter author name to search for: ")
         if st.button("Search by Author"):
             results = search_books(author)
             if results:
-                st.write("### **Matching Books**:")
+                st.write("### Matching Books: ")
                 for i, book in enumerate(results, 1):
                     status = "Read" if book['read_status'] else "Unread"
-                    st.write(f"{i}. **{book['title']}** by {book['author']} ({book['year']}) - {book['genre']} - {status}")
+                    language = book.get('language', 'Unknown')  # Handle missing language
+                    st.write(f"{i}. {book['title']} by {book['author']} ({book['year']}) - {book['genre']} - {language} - {status}")
             else:
-                st.write("🚫 **No books found by that author.**")
+                st.write("🚫 No books found by that author.")
 
 elif menu == '📑 Display all books':
-    st.subheader('📑 **Your Library**:')
+    st.subheader('📑 Your Library: ')
     display_all_books()
 
 elif menu == '📊 Display statistics':
-    st.subheader('📊 **Library Statistics**')
+    st.subheader('📊 Library Statistics')
     display_statistics()
 
 elif menu == '🔚 Exit':
-    st.subheader('🔚 **Exit**')
+    st.subheader('🔚 Exit')
     if st.button('Clear Library & Exit'):
+        st.write("👋 Exiting... Thank you for using the Library Manager!")
         save_library()  # Save the library before exiting
         clear_session()  # Clear the library session
         st.stop()  # Stops further execution of the app
-
 
 st.markdown(
     """
